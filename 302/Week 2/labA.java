@@ -13,6 +13,9 @@ public class NumberReader
 		double metricHeight = 0.0;
 		double userBMI = 0.0;
 		boolean isNormal = true;
+		char c = null;
+		int tmp = 1;
+	//init scanner	
 		Scanner stdin = new Scanner(System.in);
 	//-ask the user their height in inches, as an integer
 		System.out.print("Please enter your height in inches:");
@@ -29,6 +32,15 @@ public class NumberReader
 	//- create a variable of type boolean called isNormal.  Use an if/else statements to set the value of isNormal to either true or false (remember, no quotes)
 		if (userBMI > 25 || userBMI < 19)
 			isNormal = false;
+	//-ask the user to enter in a character, and store it in the variable c
+		System.out.println(“enter a character”);
+		c = stdin.next().charAt(0);
+	//Use a while loop to print out that many of the character, all on the same line. 
+		while (tmp < userBMI)
+		{
+			System.out.print(c);
+			tmp += 1;
+		}
 	return;
   }
 }
