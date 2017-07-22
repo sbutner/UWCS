@@ -9,6 +9,8 @@ public class TestGame {
 		testPlaceBlockPartFull();
 		testMergeDown();
 		testMergeUp();
+		testMergeLeft();
+		testMergeRight();
 		testSlideUp();
 		testSlideDown();
 		testSlideLeft();
@@ -77,11 +79,11 @@ public class TestGame {
 	
 	public static int testMergeDown(){
 		GameState testBoard = new GameState(4);
-		testBoard.setTile(0,0,2);
-		testBoard.setTile(1,0,2);
+		testBoard.setTile(2,0,2);
+		testBoard.setTile(3,0,2);
 		testBoard.mergeDown();
 
-		int[][] validBoard = {{4,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
+		int[][] validBoard = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{4,0,0,0}};
 		if (checkBoard(testBoard.getBoard(), validBoard))
 		{
 			System.out.println("Merge down: passed");
@@ -117,6 +119,46 @@ public class TestGame {
 		}		
 	}
 	
+	public static int testMergeLeft(){
+		GameState testBoard = new GameState(4);
+		testBoard.setTile(0,0,2);
+		testBoard.setTile(0,1,2);
+		testBoard.mergeLeft();
+
+		int[][] validBoard = {{4,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
+		if (checkBoard(testBoard.getBoard(), validBoard))
+		{
+			System.out.println("Merge left: passed");
+			return 1;
+		} 
+		
+		else
+		
+		{
+			System.out.println("Merge left: failed");
+			return 0;
+		}		
+	}
+	public static int testMergeRight(){
+		GameState testBoard = new GameState(4);
+		testBoard.setTile(0,2,2);
+		testBoard.setTile(0,3,2);
+		testBoard.mergeRight();
+
+		int[][] validBoard = {{0,0,0,4},{0,0,0,0},{0,0,0,0},{0,0,0,0}};
+		if (checkBoard(testBoard.getBoard(), validBoard))
+		{
+			System.out.println("Merge right: passed");
+			return 1;
+		} 
+		
+		else
+		
+		{
+			System.out.println("Merge right: failed");
+			return 0;
+		}		
+	}
 	public static int testSlideUp(){
 		GameState testBoard = new GameState(4);
 		testBoard.setTile(2,0,2);
