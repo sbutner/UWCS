@@ -158,7 +158,6 @@ public class Picture extends SimplePicture
     int mirrorPoint = 276;
     Pixel leftPixel = null;
     Pixel rightPixel = null;
-    int count = 0;
     Pixel[][] pixels = this.getPixels2D();
     // TO DO:  CREATE FOR LOOPS TO COPY JUST THE RIGHT PIXELS
     int width = pixels[0].length;
@@ -173,11 +172,179 @@ public class Picture extends SimplePicture
     } 
   
   }
-
+  /**
+   * Channel-wise averaging kernel of squareSize x squareSize   
+   * TODO: find a more canonical Java way of zero-padding squares that fall outside
+   * @param: startRow
+   * @param: startCol
+   * @param: squareSize
+   */
+  public void pixellate(int startRow, int startCol, int squareSize){
+	  Pixel[][] pixels = this.getPixels2D();
+	  int averageRed = 0;
+	  int averageGreen = 0;
+	  int averageBlue = 0;
+	  
+	  for (int iR = startRow; iR <= (startRow + squareSize); iR++){
+		  for (int iC = startCol; iC <= (startCol + squareSize); iC++){
+			  //compute sum of color values for all squares
+			 try {
+			  averageRed += pixels[iR][iC].getRed();
+			  averageGreen += pixels[iR][iC].getGreen();
+			  averageBlue += pixels[iR][iC].getBlue();
+			 } 
+			 catch (IndexOutOfBoundsException e) 
+			 {
+				 averageRed += averageRed;
+				 averageGreen += averageGreen;
+				 averageBlue += averageBlue;
+			 } 
+			 
+		  }
+	  }
+	  
+	  //divide by N squares
+	  averageRed /= (squareSize * squareSize);
+	  averageGreen /= (squareSize * squareSize);
+	  averageBlue /= (squareSize * squareSize);
+	  
+	  for (int iR = startRow; iR < (startRow + squareSize); iR++){
+		  for (int iC = startCol; iC <= (startCol + squareSize); iC++){
+			  //set color values to averages
+			  try {
+			  pixels[iR][iC].setRed(averageRed);
+			  pixels[iR][iC].setGreen(averageGreen);
+			  pixels[iR][iC].setBlue(averageBlue);
+			  } 
+			  catch (IndexOutOfBoundsException e) 
+			  {
+				  //yes this should at least have a logger line here
+			  } 
+		  }
+	  }
+  return;
+  }
+  
+  
+  /**
+   * pass the pixellate filter over the Picture and apply
+   * 
+   * @param: squareSize
+   * 
+   */
+  public void pixellate(int squareSize){
+	  Pixel[][] pixels = this.getPixels2D();
+	  
+	  
+	  for (int r = 0; r < pixels.length; r += squareSize){ 
+		  for (int c = 0; c < pixels[0].length; c += squareSize){ 
+			  System.out.println("Pixellate square with sides of "+squareSize+" at: ("+r+", "+c+")");
+			  pixellate(r, c, squareSize);
+		  }
+	  }
+	  return;
+  }
+  
+  /**
+   * quantize each channel into N buckets
+   * 
+   * @param: numberOfDivisions
+   * 
+   */
+  public void posterize(int numberOfDivisions){
+	  Pixel[][] pixels = this.getPixels2D();
+	  int spaceBetween = 255 / numberOfDivisions;
+	  
+	  for (int r = 0; r < pixels.length; r++){
+		  for (int c = 0; c < pixels[0].length; c++){
+			  int indexRed = pixels[r][c].getRed() / spaceBetween;
+			  int indexGreen = pixels[r][c].getGreen() / spaceBetween;
+			  int indexBlue = pixels[r][c].getBlue() / spaceBetween;
+			  
+			  pixels[r][c].setRed((indexRed*spaceBetween + (indexRed+1)*spaceBetween) / 2);
+			  pixels[r][c].setGreen((indexGreen*spaceBetween + (indexGreen+1)*spaceBetween) / 2);
+			  pixels[r][c].setBlue((indexBlue*spaceBetween + (indexBlue+1)*spaceBetween) / 2);
+		  }
+	  }
+	  
+  }
+  
+  /**
+   *  Rounds each channel's value down to the nearest multiple of 8
+   */
+  public void roundDownToMultOf8(){
+	  Pixel[][] pixels = this.getPixels2D();
+	  
+	  for (int r = 0; r < pixels.length; r++){
+		  for (int c = 0; c < pixels[0].length; c++){
+			  int newRed = pixels[r][c].getRed() / 8 * 8;
+			  int newGreen = pixels[r][c].getGreen() / 8 * 8;
+			  int newBlue = pixels[r][c].getBlue() / 8 * 8;
+			  
+			  pixels[r][c].setRed(newRed);
+			  pixels[r][c].setGreen(newGreen);
+			  pixels[r][c].setBlue(newBlue);
+		  }
+	  }
+	  return;
+  }
+  
+  /**
+   * Steganographosaurus, the method.
+   * Hides a posterized picture within the picture.
+   * 
+   * @param: pictureToHide, must be smaller than the picture
+   * the method is called on
+   */
+  public void hidePicture(Picture pictureToHide){
+	  this.roundDownToMultOf8();	  
+	  Pixel[][] pixels = this.getPixels2D();
+	  Pixel[][] steganoi = pictureToHide.getPixels2D();
+	  
+	  
+	  for (int r = 0; r < steganoi.length; r++){
+		  for (int c = 0; c < steganoi[0].length; c++){
+			  int newRed = pixels[r][c].getRed() + (steganoi[r][c].getRed()/32);
+			  int newGreen = pixels[r][c].getGreen() + (steganoi[r][c].getGreen()/32);
+			  int newBlue = pixels[r][c].getBlue() + (steganoi[r][c].getBlue()/32);
+			  
+			  pixels[r][c].setRed(newRed);
+			  pixels[r][c].setGreen(newGreen);
+			  pixels[r][c].setBlue(newBlue);
+		  }
+	  }
+	  
+	  return;
+  }
+  
+  /**
+   * Method to extract the hidden image from the 
+   * steganographosaurus. Subtracts out the quantized original
+   * and posterizes the hidden using the remainder as index
+   * in array of quantized values
+   * 
+   */
+  public void decodePicture(){
+	  Pixel[][] pixels = this.getPixels2D();
+	  for (int r = 0; r < pixels.length; r++){
+		  for (int c = 0; c < pixels[0].length; c++){
+			  int newRed = (pixels[r][c].getRed() % 8) * 32 + 16;
+			  int newGreen = (pixels[r][c].getGreen() % 8) * 32 + 16;
+			  int newBlue = (pixels[r][c].getBlue() % 8) * 32 + 16;
+			  
+			  pixels[r][c].setRed(newRed);
+			  pixels[r][c].setGreen(newGreen);
+			  pixels[r][c].setBlue(newBlue);
+		  }
+	  }
+	  return;
+  }
+  
   
   /** Method to show large changes in color 
-    * @param edgeDist the distance for finding edges
+    * 
     */
+
   public void edgeDetection()
   {
     Pixel leftPixel = null;
